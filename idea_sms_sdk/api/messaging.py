@@ -109,8 +109,4 @@ class SMS(object):
         return r.json()
 
 
-if __name__ == '__main__':
-    api = SMS(partner_id='162', sender_id='IDEASMS', api_key='5ccc269d144c5')
 
-    res = api.account_balance()
-    print(res)
