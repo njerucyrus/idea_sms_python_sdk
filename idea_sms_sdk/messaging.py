@@ -1,6 +1,6 @@
 import requests
 
-from idea_sms_sdk.api.utils import CleanPhoneNumber
+from idea_sms_sdk.utils import CleanPhoneNumber
 
 
 class SMS(object):
