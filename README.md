@@ -15,7 +15,8 @@ pip install idea_sms_sdk
 ```python
 from idea_sms_sdk.messaging import SMS
 
-Initialize the sdk
+# Initialize the sdk
+
 api = SMS(sender_id='your_sender_id', api_key='your_api_key', partner_id='yourpartner_id')
 
 # send sms message
