@@ -1,4 +1,4 @@
-# idea_sms_sdk
+## idea_sms_sdk
 
 idea_sms_sdk is a Python library for sending sms from idea sms platform
 
@@ -21,6 +21,10 @@ api = SMS(sender_id='your_sender_id', api_key='your_api_key', partner_id='yourpa
 # send sms message
 
 api.send_sms(phone_numbers=['07123456789'], message_text='Hello from Idea Sms') #returns a json object.
+
+delivery_report = api.delivery_report(message_id='your_message_id') #returns a json object
+
+account_balance = api.account_balance() #returns a json object
 
 ```
 
