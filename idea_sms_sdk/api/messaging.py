@@ -12,20 +12,20 @@ class SMS(object):
         self._sender_id = sender_id
 
         if self._api_key is None or self._api_key.strip() == '':
-            raise ValueError("user id cannot be empty")
+            raise ValueError("api_key cannot be empty")
 
         if self._partner_id is None or self._partner_id.strip() == '':
-            raise ValueError("user id cannot be empty")
+            raise ValueError("partner_id cannot be empty")
 
         if type(self._partner_id) is not str:
-            raise TypeError("user_id must be a string")
+            raise TypeError("partner_id must be a string")
 
         if type(self._api_key) is not str:
-            raise TypeError("user_id must be a string")
+            raise TypeError("api_key must be a string")
 
         if self._sender_id is not None:
             if type(sender_id) is not str:
-                raise TypeError('Provided sender id must be a string')
+                raise TypeError('sender_id must be a string')
 
     def send_sms(self, phone_numbers=None, message_text=None):
 
