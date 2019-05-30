@@ -4,7 +4,7 @@ idea_sms_sdk is a Python library for sending sms from idea sms platform
 
 ## Installation
 
-Use the package manager pip to install idea_sms_sdk.
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install idea_sms_sdk.
 
 ```bash
 pip install idea_sms_sdk
