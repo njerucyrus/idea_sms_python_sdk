@@ -8,6 +8,10 @@ class CleanPhoneNumber(object):
         prefix = phone[0]
         length = len(phone_number)
 
+        if prefix == '+' and length == 13:
+            phone[0] = ''
+            return "".join(phone)
+
         if prefix == '0' and length == 10:
             phone[0] = '254'
             return "".join(phone)

@@ -1,31 +1,31 @@
-import hashlib
-import json
-import uuid
-from xml.etree import ElementTree as etree
-from xml.etree.ElementTree import fromstring
-
 import requests
 
-from idea_sms_sdk.api import CleanPhoneNumber
+from idea_sms_sdk.api.utils import CleanPhoneNumber
 
 
 class SMS(object):
-    def __init__(self, user_id=None, password=None, sender_id=None, account_url='http://sms.ideasms.co.ke/'):
-        self._user_id = user_id
-        self._password = password
-        self._base_url = account_url
-        self._sender_id = None
+    def __init__(self, partner_id=None, api_key=None, sender_id='IDEASMS',
+                 base_url='https://org.ideasms.co.ke'):
+        self._partner_id = partner_id
+        self._api_key = api_key
+        self._base_url = base_url
+        self._sender_id = sender_id
 
-        if self._user_id is None or user_id.strip() == '':
+        if self._api_key is None or self._api_key.strip() == '':
             raise ValueError("user id cannot be empty")
-        if type(self._user_id) is not str:
+
+        if self._partner_id is None or self._partner_id.strip() == '':
+            raise ValueError("user id cannot be empty")
+
+        if type(self._partner_id) is not str:
             raise TypeError("user_id must be a string")
 
-        if self._password is None or self._password.strip() == '':
-            raise ValueError('password cannot be empty')
+        if type(self._api_key) is not str:
+            raise TypeError("user_id must be a string")
 
-        if type(self._password) is not str:
-            raise TypeError('password must be a string')
+        if self._sender_id is not None:
+            if type(sender_id) is not str:
+                raise TypeError('Provided sender id must be a string')
 
     def send_sms(self, phone_numbers=None, message_text=None):
 
@@ -34,20 +34,7 @@ class SMS(object):
         :param message_text: a text messages you want to send
         :returns json object:
 
-        if message was sent successfully:
-             ********
-            -smsclientid : str
-            -messageid: str
-
-        if there was an error while sending
-            ********
-            -smsclientid: str
-            -error_code: str
-            -error_description: str
-            -error_action: str
-        """
-
-        xml_root = etree.Element('smslist')
+      """
 
         if type(phone_numbers) is not list:
             raise TypeError("phone_numbers must be a list")
@@ -56,47 +43,74 @@ class SMS(object):
         if message_text is None or message_text.strip() == '':
             raise ValueError('message_text cannot be empty string')
 
-        for phone_number in phone_numbers:
-            sms = etree.SubElement(xml_root, 'sms')
+        payload = {
+            'partnerID': self._partner_id,
+            'apikey': self._api_key,
+            'mobile': ",".join([CleanPhoneNumber(phone).sanitize_phone_number() for phone in phone_numbers]),
+            'message': message_text,
+            'shortcode': self._sender_id,
+            'pass_type': 'plain'
+        }
 
-            user = etree.SubElement(sms, 'user')
-            user.text = self._user_id
+        api_endpoint = "{0}{1}".format(self._base_url, "/api/services/sendsms/")
+        headers = {
+            'Content-Type': 'application/json'
+        }
 
-            password = etree.SubElement(sms, 'password')
-            password.text = self._password
+        r = requests.post(url=api_endpoint, headers=headers, json=payload)
+        return r.json()
 
-            mobiles = etree.SubElement(sms, 'mobiles')
-            mobiles.text = CleanPhoneNumber(phone_number).sanitize_phone_number()
+    def delivery_report(self, message_id):
+        """
+        :param message_id: str
+        :return: json response
+        example of response
+            {'response-code': 200,
+            'message-id': 11757374,
+            'response-description': 'Success',
+            'delivery-status': 1,
+            'delivery-description': 'DeliveredToTerminal',
+            'delivery-time': '2019-05-30 16:44:28'
+         }
+        """
+        if type(message_id) is not str:
+            raise TypeError('message_id must be a string')
+        if message_id is None or message_id.strip() == '':
+            raise ValueError('message_id cannot be empty')
 
-            message = etree.SubElement(sms, 'message')
-            message.text = message_text
+        payload = {
+            'partnerID': self._partner_id,
+            'apikey': self._api_key,
+            'messageID': message_id
+        }
 
-            if self._sender_id:
-                sender_id = etree.SubElement(sms, 'senderid')
-                sender_id.text = self._sender_id
+        api_endpoint = "{0}{1}".format(self._base_url, '/api/services/getdlr/')
 
-            client_sms_id = etree.SubElement(sms, 'clientsmsid')
-            client_sms_id.text = hashlib.md5(str(uuid.uuid4()).encode()).hexdigest()
+        headers = {
+            'Content-Type': 'application/json'
+        }
 
-            unicode = etree.SubElement(sms, 'unicode')
-            unicode.text = 0
+        r = requests.post(url=api_endpoint, headers=headers, json=payload)
+        return r.json()
 
-        url = "{0}{1}".format(self._base_url, "/sendsms.jsp")
+    def account_balance(self):
+        payload = {
+            'partnerID': self._partner_id,
+            'apikey': self._api_key
+        }
 
-        headers = {'Content-Type': 'application/xml'}
+        api_endpoint = "{0}{1}".format(self._base_url, '/api/services/getbalance/')
 
-        xmlstr = etree.tostring(xml_root, encoding='iso-8859-1', method='xml')
+        headers = {
+            'Content-Type': 'application/json'
+        }
 
-        req = requests.post(url=url, data=xmlstr, headers=headers)
+        r = requests.post(url=api_endpoint, headers=headers, json=payload)
+        return r.json()
 
-        api_response = {}
 
-        if req.status_code == 200:
-            xml_res = fromstring(req.text)
+if __name__ == '__main__':
+    api = SMS(partner_id='162', sender_id='IDEASMS', api_key='5ccc269d144c5')
 
-            for item in xml_res.getchildren():
-
-                for res_item in item.getchildren():
-                    api_response[res_item.tag.replace('-', '_')] = res_item.text
-
-        return json.dumps(api_response)
+    res = api.account_balance()
+    print(res)
